@@ -39,7 +39,19 @@ contained in the file ftp_srv.dta. Start by merging this file to ftp_ar.dta. How
 original sample members were interviewed for the survey?
 
 ```{r import data}
+# import admin data
 ftp_ar <- read_dta("ftp_ar.dta")
+# import survey data
+ftp_srv <- read_dta("ftp_srv.dta")
+
+# merge data sets
+merged_data <- merge(ftp_ar, ftp_srv,
+                     # matching by unique sampleid
+                     by = "sampleid")
+
+# print observation count
+nrow(merged_data)
+
 ```
 
 (2) Tabulate the variable fmi2. How many of the survey respondents have valid (i.e., non-
@@ -47,6 +59,12 @@ missing) responses? How many thought they were subject to a time limit? How many
 otherwise? How many were unsure? Finally, what explains why the number of valid responses
 is less than the number of people interviewed for the survey? (Hint: examine variables fmi1 and
 fmi1a.)
+
+
+```{r}
+
+```
+
 (3) Define a new treatment dummy that is equal to one for people who believed they were
 subject to a time limit and equal to zero for those who did not or were not sure. Call it TLyes.
 Cross-tabulate TLyes and the experimental dummy (“e”). Discuss confusion about the time
