@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE, results='hide'}
 knitr::opts_chunk$set(echo = TRUE)
 
-# load packages
+# load packagez
 library("haven")
 library("tidyverse")
 library("magrittr")
