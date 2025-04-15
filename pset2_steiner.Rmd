@@ -1,0 +1,75 @@
+---
+title: "pset2_steiner"
+author: "erika steiner"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE, results='hide'}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+library("haven")
+library("tidyverse")
+library("magrittr")
+library('knitr')
+library('kableExtra')
+library("broom")
+library("stringr")
+library("sandwich")
+library("lmtest")
+library("car")
+library("stargazer")
+
+# get rid of scientific notation
+options(scipen=999)
+```
+
+In this problem set, we continue analyzing the FTP program, but we reinterpret treatment
+status. In FTP, as in other programs, there was confusion among respondents about whether
+they were subject to a time limit. For the purposes of this problem set, we will consider
+respondents who said that they were subject to a time limited as treated, and those who said
+they were not as controls. Our goal will be to estimate the effect of a perceived time limit on
+welfare receipt, employment, and the like. The idea is that you cannot be influenced by a time
+limit if you don’t believe it applies to you, whether or not it applies to you in fact.
+All data and documentation can be found on Canvas under Problem Set 1.
+
+(1) The question about the time limit comes from the four-year survey, the results of which are
+contained in the file ftp_srv.dta. Start by merging this file to ftp_ar.dta. How many of the
+original sample members were interviewed for the survey?
+
+```{r import data}
+ftp_ar <- read_dta("ftp_ar.dta")
+```
+
+(2) Tabulate the variable fmi2. How many of the survey respondents have valid (i.e., non-
+missing) responses? How many thought they were subject to a time limit? How many thought
+otherwise? How many were unsure? Finally, what explains why the number of valid responses
+is less than the number of people interviewed for the survey? (Hint: examine variables fmi1 and
+fmi1a.)
+(3) Define a new treatment dummy that is equal to one for people who believed they were
+subject to a time limit and equal to zero for those who did not or were not sure. Call it TLyes.
+Cross-tabulate TLyes and the experimental dummy (“e”). Discuss confusion about the time
+limit.
+(4) Using TLyes as your treatment indicator, estimate by OLS the effect of the time limit on theh
+number of months of welfare receipt during years 1-2 post_RA. To do this, estimate a
+regression of your dependent variable on TLyes and the set of control variables used by MDRC
+in their publications (the ones with the string “cova:” in their labels). Do you believe these
+regressions consistently estimate the effect of the time limit? Explain.
+(5) Provide conditions under which the experimental dummy would be a valid instrument for
+the time limit.
+(6) Estimate the first-stage regression of TLyes on e. Do you have a weak-instrument problem?
+(7) Use the experimental dummy as an instrument to estimate the effect of the time limit on
+the number of months of welfare receipt during years 1-2 post-RA. How do the welfare receipt
+results compare to the OLS estimates from question (4)? Can you summarize the direction of
+bias associated with the OLS estimates?
+(8) Explain why you would expect the exclusion condition to fail for the above regression.
+(9) Now estimate a model with age-group interactions, along the lines of what you did in PS 1.
+Define the same four age groups, and estimate the same model, but interact the age-group
+dummies with TLyes rather than e. Estimate the model by OLS. Omit the control variables.
+(10) Now estimate the same model, but use interactions between e and the age-group
+dummies as instruments for the interactions between TLyes and the age-group dummies.
+Comment on how estimating the model with age-group interactions helps to satisfy the
+exclusion restriction.
+(11) Discuss your estimated effects of time limits and how they compare with the estimates
+from question (9). Can you diagnose why the two sets of coefficients differ?
