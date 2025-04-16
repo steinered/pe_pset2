@@ -542,11 +542,10 @@ people said they hadn’t received any cash assistance since randomization
 respondents may not have interacted with cash assistance programs
 recently and would not how to respond to this question.</p>
 <ol start="3" style="list-style-type: decimal">
-<li>Define a new treatment dummy that is equal to one for people who
+<li><em>Define a new treatment dummy that is equal to one for people who
 believed they were subject to a time limit and equal to zero for those
 who did not or were not sure. Call it TLyes. Cross-tabulate TLyes and
-the experimental dummy (“e”). Discuss confusion about the time
-limit.</li>
+the experimental dummy (“e”).</em></li>
 </ol>
 <pre class="r"><code>ftp_merged %&lt;&gt;%  
   # add new treatment dummy TLyes
@@ -558,7 +557,11 @@ limit.</li>
       fmi2 == 2 ~ 0,
       fmi2 == 8 ~ 0
     )
-  )
+  ) %&gt;% 
+  # remove rows where TLyes = NA
+  filter(!is.na(TLyes))
+
+
 
 # cross-tabulate TLyes and e
 ftp_merged %&gt;% 
@@ -601,21 +604,558 @@ ftp_merged %&gt;%
 <td align="right">205</td>
 <td align="right">461</td>
 </tr>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="right">295</td>
-<td align="right">285</td>
-</tr>
 </tbody>
 </table>
+<p><em>Discuss confusion about the time limit.</em></p>
+<p>Approximately 25% of participants who were subject to time limits
+incorrectly believed they were not subject to time limits. Similarly,
+31% of participants who were not subject to time limits incorrectly
+believed they were subject to time limits.</p>
+<p>The inaccuracy of these beliefs is very relevant to this study, which
+seeks to understand how imposed time limits change the behavior of
+welfare recipients. If participants have inaccurate information about
+these time limits, their behaviors may differ from what would be
+expected if they had a more accurate understanding. Conclusions drawn
+from this study should thus consider how this confusion may confound our
+understanding of results.</p>
 <ol start="4" style="list-style-type: decimal">
-<li>Using TLyes as your treatment indicator, estimate by OLS the effect
-of the time limit on theh number of months of welfare receipt during
-years 1-2 post_RA. To do this, estimate a regression of your dependent
-variable on TLyes and the set of control variables used by MDRC in their
-publications (the ones with the string “cova:” in their labels). Do you
-believe these regressions consistently estimate the effect of the time
-limit? Explain.</li>
+<li><em>Using TLyes as your treatment indicator, estimate by OLS the
+effect of the time limit on the number of months of welfare receipt
+during years 1-2 post_RA. To do this, estimate a regression of your
+dependent variable on TLyes and the set of control variables used by
+MDRC in their publications (the ones with the string “cova:” in their
+labels).</em></li>
+</ol>
+<pre class="r"><code># create variable which equals number of months on welfare receipt during years 1-2 post_RA
+
+ftp_merged %&lt;&gt;%
+  # variable = number of months rec welfare y1-2 (nmrecyr12)
+  mutate(nmrecyr12 = 
+           # number of months y1 + number of months y2
+           krecc2t5 + krecc6t9)
+
+# identify covas columns
+# pulled from pset1
+covas &lt;- ftp_merged %&gt;% 
+  # select
+  select( 
+    # columns where...
+    where(~ {
+    # the column&#39;s label
+    column_label &lt;- attributes(.)$label
+    # is not null AND contains &#39;cova&#39; (returns TRUE)
+    !is.null(column_label) &amp;&amp; str_detect(column_label, &#39;cova&#39;)
+    }))  %&gt;% 
+  colnames()
+
+# write formula for nmrecyr12 regressed on TLyes and control variables (covas)
+formula &lt;- as.formula(paste(
+  # nmrecyr12 regressed on TLyes and...
+  &quot;nmrecyr12 ~ TLyes+&quot;, 
+  # list covas as string, separated by +
+  paste(covas, collapse = &quot; + &quot;)))
+
+
+model &lt;- lm(formula, data = ftp_merged)
+
+# summary(model)
+
+# regress nmrecyr12 on TLyes and set of control variables
+
+stargazer(model, title = &quot;Results&quot;, type = &quot;html&quot;)</code></pre>
+<table style="text-align:center">
+<caption>
+<strong>Results</strong>
+</caption>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+<em>Dependent variable:</em>
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td colspan="1" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+nmrecyr12
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+TLyes
+</td>
+<td>
+0.389
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.438)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2adc
+</td>
+<td>
+0.001<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.0003)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yradc
+</td>
+<td>
+-0.0001
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.001)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2rec
+</td>
+<td>
+2.141
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(1.537)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrrec
+</td>
+<td>
+1.631
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(1.595)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrkrec
+</td>
+<td>
+0.190
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.149)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrearn
+</td>
+<td>
+-0.0001
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.0003)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2earn
+</td>
+<td>
+-0.0001
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.0001)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrearnsq
+</td>
+<td>
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.000)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yremp
+</td>
+<td>
+-0.785
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(1.061)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2emp
+</td>
+<td>
+-0.118
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.846)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrkemp
+</td>
+<td>
+-0.006
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.611)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2kemp
+</td>
+<td>
+0.040
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.332)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2fs
+</td>
+<td>
+-0.0002
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.0003)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrfs
+</td>
+<td>
+-0.0002
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.001)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yr2rfs
+</td>
+<td>
+-1.071
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(1.753)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrrfs
+</td>
+<td>
+-0.454
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(1.830)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+yrkrfs
+</td>
+<td>
+0.162
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.137)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Constant
+</td>
+<td>
+8.190<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.685)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Observations
+</td>
+<td>
+1,149
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+R<sup>2</sup>
+</td>
+<td>
+0.285
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Adjusted R<sup>2</sup>
+</td>
+<td>
+0.273
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Residual Std. Error
+</td>
+<td>
+7.240 (df = 1130)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+F Statistic
+</td>
+<td>
+25.008<sup>***</sup> (df = 18; 1130)
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+<em>Note:</em>
+</td>
+<td style="text-align:right">
+<sup><em></sup>p&lt;0.1; <sup><strong></sup>p&lt;0.05;
+<sup></strong></em></sup>p&lt;0.01
+</td>
+</tr>
+</table>
+<pre class="r"><code># summary(lm(formula, data = ftp_merged))</code></pre>
+<p><em>Do you believe these regressions consistently estimate the effect
+of the time limit? Explain.</em></p>
+<ol start="5" style="list-style-type: decimal">
 <li>Provide conditions under which the experimental dummy would be a
 valid instrument for the time limit.</li>
 <li>Estimate the first-stage regression of TLyes on e. Do you have a
