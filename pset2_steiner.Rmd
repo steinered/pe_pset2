@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # load packages
 library("haven")
 library("tidyverse")
-# library("magrittr")
-# library('knitr')
-# library('kableExtra')
+library("magrittr")
+library('knitr')
+library('kableExtra')
 # library("broom")
 # library("stringr")
 # library("sandwich")
@@ -44,13 +44,18 @@ ftp_ar <- read_dta("ftp_ar.dta")
 # import survey data
 ftp_srv <- read_dta("ftp_srv.dta")
 
-# merge data sets
-merged_data <- merge(ftp_ar, ftp_srv,
-                     # matching by unique sampleid
-                     by = "sampleid")
+# this ftp_ar.dta file already has all survey questions imported
+# you can confirm this by running the following:
+# setdiff(colnames(ftp_srv), colnames(ftp_ar))
 
-# print observation count
-nrow(merged_data)
+ftp_merged <- ftp_ar %>% 
+# filter out ftp_ar participants who did not participate in the survey
+  filter(.$sampleid %in% (ftp_srv$sampleid))
+
+# count number of sample members interviewed for survey
+nrow(ftp_merged)
+
+# page 8 documentation: Only the 2,160 sample members who entered the study between August 1994 and February 1995 were attempted for this survey. The 1,730 people who completed the survey represent 80 percent of those who were attempted and approximately 60 percent of the report sample.
 
 ```
 
@@ -61,7 +66,26 @@ is less than the number of people interviewed for the survey? (Hint: examine var
 fmi1a.)
 
 
-```{r}
+```{r fmi2}
+# fmi2: "Is/was there a time limit?"
+# fmi1: currently receiving cash assistance
+# fmi1a: have received cash assistance
+
+# create a table of fmi2 responses
+ftp_merged %>% 
+  # tabulate
+  count(fmi2) %>% 
+  # per survey page 48, question I2
+  # "1" = "Yes". "2" = "No", "8" = "Don't Know"
+  mutate(
+    fmi2 = case_when(
+      fmi2 == 1 ~ "Yes",
+      fmi2 == 2 ~ "No",
+      fmi2 == 8 ~ "I don't know",
+      fmi2 == NA ~ "Missing"
+    )) %>% 
+  # make table
+  kable(col.names = c("Response", "Frequency"), caption = "(Is/Was) there a time limit on how long you (are/were) allowed to receive cash assistance?")
 
 ```
 
