@@ -11,7 +11,7 @@
 
 <meta name="author" content="erika steiner" />
 
-<meta name="date" content="2025-04-15" />
+<meta name="date" content="2025-04-16" />
 
 <title>pset2_steiner</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">pset2_steiner</h1>
 <h4 class="author">erika steiner</h4>
-<h4 class="date">2025-04-15</h4>
+<h4 class="date">2025-04-16</h4>
 
 </div>
 
@@ -369,10 +369,10 @@ time limit if you don’t believe it applies to you, whether or not it
 applies to you in fact. All data and documentation can be found on
 Canvas under Problem Set 1.</p>
 <ol style="list-style-type: decimal">
-<li>The question about the time limit comes from the four-year survey,
-the results of which are contained in the file ftp_srv.dta. Start by
-merging this file to ftp_ar.dta. How many of the original sample members
-were interviewed for the survey?</li>
+<li><em>The question about the time limit comes from the four-year
+survey, the results of which are contained in the file ftp_srv.dta.
+Start by merging this file to ftp_ar.dta. How many of the original
+sample members were interviewed for the survey?</em></li>
 </ol>
 <pre class="r"><code># import admin data
 ftp_ar &lt;- read_dta(&quot;ftp_ar.dta&quot;)
@@ -385,6 +385,7 @@ ftp_srv &lt;- read_dta(&quot;ftp_srv.dta&quot;)
 
 ftp_merged &lt;- ftp_ar %&gt;% 
 # filter out ftp_ar participants who did not participate in the survey
+  # using sampleid per data documentation page 13
   filter(.$sampleid %in% (ftp_srv$sampleid))
 
 # count number of sample members interviewed for survey
@@ -392,16 +393,9 @@ nrow(ftp_merged)</code></pre>
 <pre><code>## [1] 1729</code></pre>
 <pre class="r"><code># page 8 documentation: Only the 2,160 sample members who entered the study between August 1994 and February 1995 were attempted for this survey. The 1,730 people who completed the survey represent 80 percent of those who were attempted and approximately 60 percent of the report sample.</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li>Tabulate the variable fmi2. How many of the survey respondents have
-valid (i.e., non- missing) responses? How many thought they were subject
-to a time limit? How many thought otherwise? How many were unsure?
-Finally, what explains why the number of valid responses is less than
-the number of people interviewed for the survey? (Hint: examine
-variables fmi1 and fmi1a.)</li>
+<li><em>Tabulate the variable fmi2.</em></li>
 </ol>
 <pre class="r"><code># fmi2: &quot;Is/was there a time limit?&quot;
-# fmi1: currently receiving cash assistance
-# fmi1a: have received cash assistance
 
 # create a table of fmi2 responses
 ftp_merged %&gt;% 
@@ -414,11 +408,16 @@ ftp_merged %&gt;%
       fmi2 == 1 ~ &quot;Yes&quot;,
       fmi2 == 2 ~ &quot;No&quot;,
       fmi2 == 8 ~ &quot;I don&#39;t know&quot;,
-      fmi2 == NA ~ &quot;Missing&quot;
+      # Edit from chatgpt - did not know how to re-format NA counts
+      # Prompt: how to handle &quot;NA&quot; format in mutate case when argument r
+      # Response: Check for NA explicitly: In case_when(), you need to handle NA values explicitly by using the is.na() function
+      is.na(fmi2) ~ &quot;Missing&quot;
     )) %&gt;% 
-  # make pretty table
-  kable(col.names = c(&quot;Response&quot;, &quot;Frequency&quot;), label = &quot;Did&quot;)</code></pre>
+  # make table
+  kable(col.names = c(&quot;Response&quot;, &quot;Frequency&quot;), caption = &quot;(Is/Was) there a time limit on how long you (are/were) allowed to receive cash assistance?&quot;)</code></pre>
 <table>
+<caption>(Is/Was) there a time limit on how long you (are/were) allowed
+to receive cash assistance?</caption>
 <thead>
 <tr class="header">
 <th align="left">Response</th>
@@ -439,17 +438,177 @@ ftp_merged %&gt;%
 <td align="right">118</td>
 </tr>
 <tr class="even">
-<td align="left">NA</td>
+<td align="left">Missing</td>
 <td align="right">580</td>
 </tr>
 </tbody>
 </table>
+<p><em>How many of the survey respondents have valid (i.e., non-missing)
+responses?</em></p>
+<p>1149</p>
+<p><em>How many thought they were subject to a time limit?</em></p>
+<p>666</p>
+<p><em>How many thought otherwise?</em></p>
+<p>365</p>
+<p><em>How many were unsure?</em></p>
+<p>118</p>
+<p><em>Finally, what explains why the number of valid responses is less
+than the number of people interviewed for the survey?</em> (Hint:
+examine variables fmi1 and fmi1a.)</p>
+<pre class="r"><code># fmi1: currently receiving cash assistance
+# fmi1a: have received cash assistance
+
+# fmi1 table
+ftp_merged %&gt;% 
+  # tabulate
+  count(fmi1) %&gt;% 
+  # per survey page 48, question I1
+  # &quot;1&quot; = &quot;Yes&quot;. &quot;2&quot; = &quot;No&quot;, &quot;8&quot; = &quot;Don&#39;t Know&quot;
+  mutate(
+    fmi1 = case_when(
+      fmi1 == 1 ~ &quot;Yes&quot;,
+      fmi1 == 2 ~ &quot;No&quot;,
+      fmi1 == 8 ~ &quot;I don&#39;t know&quot;,
+      is.na(fmi1) ~ &quot;Missing&quot;
+    )) %&gt;% 
+  # make table
+  kable(col.names = c(&quot;Response&quot;, &quot;Frequency&quot;), caption = &quot;Are you currently receiving cash assistance through AFDC, the WAGES program, or TANF?&quot;)</code></pre>
+<table>
+<caption>Are you currently receiving cash assistance through AFDC, the
+WAGES program, or TANF?</caption>
+<thead>
+<tr class="header">
+<th align="left">Response</th>
+<th align="right">Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Yes</td>
+<td align="right">230</td>
+</tr>
+<tr class="even">
+<td align="left">No</td>
+<td align="right">1499</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># fmi1a table
+ftp_merged %&gt;% 
+  # tabulate
+  count(fmi1a) %&gt;% 
+  # per survey page 48, question I1a
+  # &quot;1&quot; = &quot;Yes&quot;. &quot;2&quot; = &quot;No&quot;, &quot;8&quot; = &quot;Don&#39;t Know&quot;
+  mutate(
+    fmi1a = case_when(
+      fmi1a == 1 ~ &quot;Yes&quot;,
+      fmi1a == 2 ~ &quot;No&quot;,
+      fmi1a == 8 ~ &quot;I don&#39;t know&quot;,
+      is.na(fmi1a) ~ &quot;Missing&quot;
+    )) %&gt;% 
+  # make table
+  kable(col.names = c(&quot;Response&quot;, &quot;Frequency&quot;), caption = &quot;Have you ever received cash assistance since (RAD)?&quot;)</code></pre>
+<table>
+<caption>Have you ever received cash assistance since (RAD)?</caption>
+<thead>
+<tr class="header">
+<th align="left">Response</th>
+<th align="right">Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Yes</td>
+<td align="right">919</td>
+</tr>
+<tr class="even">
+<td align="left">No</td>
+<td align="right">565</td>
+</tr>
+<tr class="odd">
+<td align="left">I don’t know</td>
+<td align="right">15</td>
+</tr>
+<tr class="even">
+<td align="left">Missing</td>
+<td align="right">230</td>
+</tr>
+</tbody>
+</table>
+<p>Only 230 people reported actively receiving cash assistance. Of the
+~1500 people who did not report actively receiving cash assistance, 565
+people said they hadn’t received any cash assistance since randomization
+(which could have occurred up to two years prior TK). Thus, many
+respondents may not have interacted with cash assistance programs
+recently and would not how to respond to this question.</p>
 <ol start="3" style="list-style-type: decimal">
 <li>Define a new treatment dummy that is equal to one for people who
 believed they were subject to a time limit and equal to zero for those
 who did not or were not sure. Call it TLyes. Cross-tabulate TLyes and
 the experimental dummy (“e”). Discuss confusion about the time
 limit.</li>
+</ol>
+<pre class="r"><code>ftp_merged %&lt;&gt;%  
+  # add new treatment dummy TLyes
+  mutate(TLyes = 
+    case_when(
+      # 1 if believed subject to time limit
+      fmi2 == 1 ~ 1,
+      # 0 if did not or were not sure if subject to time limit
+      fmi2 == 2 ~ 0,
+      fmi2 == 8 ~ 0
+    )
+  )
+
+# cross-tabulate TLyes and e
+ftp_merged %&gt;% 
+  # tabulate
+  count(TLyes, e) %&gt;% 
+  # enhance readability of TLyes
+  mutate(
+    TLyes = case_when(
+      TLyes == 1 ~ &quot;Answered Yes TL&quot;,
+      TLyes == 0 ~ &quot;Answered No TL&quot;,
+    )) %&gt;% 
+  # enhance readability of e
+  mutate(
+    e = case_when(
+      e == 1 ~ &quot;e Treatment&quot;,
+      e == 0 ~ &quot;e Control&quot;
+    )
+  ) %&gt;% 
+  # pivot into crosstab
+  pivot_wider(names_from = e, values_from = n) %&gt;% 
+  # make table
+  kable(caption = &quot;Cross-tabulating TLyes and e&quot;)</code></pre>
+<table>
+<caption>Cross-tabulating TLyes and e</caption>
+<thead>
+<tr class="header">
+<th align="left">TLyes</th>
+<th align="right">e Control</th>
+<th align="right">e Treatment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Answered No TL</td>
+<td align="right">369</td>
+<td align="right">114</td>
+</tr>
+<tr class="even">
+<td align="left">Answered Yes TL</td>
+<td align="right">205</td>
+<td align="right">461</td>
+</tr>
+<tr class="odd">
+<td align="left">NA</td>
+<td align="right">295</td>
+<td align="right">285</td>
+</tr>
+</tbody>
+</table>
+<ol start="4" style="list-style-type: decimal">
 <li>Using TLyes as your treatment indicator, estimate by OLS the effect
 of the time limit on theh number of months of welfare receipt during
 years 1-2 post_RA. To do this, estimate a regression of your dependent

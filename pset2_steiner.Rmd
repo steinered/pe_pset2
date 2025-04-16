@@ -3,6 +3,9 @@ title: "pset2_steiner"
 author: "erika steiner"
 date: "`r Sys.Date()`"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE, results='hide'}
@@ -25,18 +28,22 @@ library('kableExtra')
 options(scipen=999)
 ```
 
-In this problem set, we continue analyzing the FTP program, but we reinterpret treatment
-status. In FTP, as in other programs, there was confusion among respondents about whether
-they were subject to a time limit. For the purposes of this problem set, we will consider
-respondents who said that they were subject to a time limited as treated, and those who said
-they were not as controls. Our goal will be to estimate the effect of a perceived time limit on
-welfare receipt, employment, and the like. The idea is that you cannot be influenced by a time
-limit if you don’t believe it applies to you, whether or not it applies to you in fact.
-All data and documentation can be found on Canvas under Problem Set 1.
+In this problem set, we continue analyzing the FTP program, but we
+reinterpret treatment status. In FTP, as in other programs, there was
+confusion among respondents about whether they were subject to a time
+limit. For the purposes of this problem set, we will consider
+respondents who said that they were subject to a time limited as
+treated, and those who said they were not as controls. Our goal will be
+to estimate the effect of a perceived time limit on welfare receipt,
+employment, and the like. The idea is that you cannot be influenced by a
+time limit if you don’t believe it applies to you, whether or not it
+applies to you in fact. All data and documentation can be found on
+Canvas under Problem Set 1.
 
-(1) The question about the time limit comes from the four-year survey, the results of which are
-contained in the file ftp_srv.dta. Start by merging this file to ftp_ar.dta. How many of the
-original sample members were interviewed for the survey?
+(1) *The question about the time limit comes from the four-year survey,
+    the results of which are contained in the file ftp_srv.dta. Start by
+    merging this file to ftp_ar.dta. How many of the original sample
+    members were interviewed for the survey?*
 
 ```{r import data}
 # import admin data
@@ -50,6 +57,7 @@ ftp_srv <- read_dta("ftp_srv.dta")
 
 ftp_merged <- ftp_ar %>% 
 # filter out ftp_ar participants who did not participate in the survey
+  # using sampleid per data documentation page 13
   filter(.$sampleid %in% (ftp_srv$sampleid))
 
 # count number of sample members interviewed for survey
@@ -59,17 +67,10 @@ nrow(ftp_merged)
 
 ```
 
-(2) Tabulate the variable fmi2. How many of the survey respondents have valid (i.e., non-
-missing) responses? How many thought they were subject to a time limit? How many thought
-otherwise? How many were unsure? Finally, what explains why the number of valid responses
-is less than the number of people interviewed for the survey? (Hint: examine variables fmi1 and
-fmi1a.)
-
+(2) *Tabulate the variable fmi2.*
 
 ```{r fmi2}
 # fmi2: "Is/was there a time limit?"
-# fmi1: currently receiving cash assistance
-# fmi1a: have received cash assistance
 
 # create a table of fmi2 responses
 ftp_merged %>% 
@@ -82,36 +83,170 @@ ftp_merged %>%
       fmi2 == 1 ~ "Yes",
       fmi2 == 2 ~ "No",
       fmi2 == 8 ~ "I don't know",
-      fmi2 == NA ~ "Missing"
+      # Edit from chatgpt - did not know how to re-format NA counts
+      # Prompt: how to handle "NA" format in mutate case when argument r
+      # Response: Check for NA explicitly: In case_when(), you need to handle NA values explicitly by using the is.na() function
+      is.na(fmi2) ~ "Missing"
     )) %>% 
   # make table
   kable(col.names = c("Response", "Frequency"), caption = "(Is/Was) there a time limit on how long you (are/were) allowed to receive cash assistance?")
+```
+
+*How many of the survey respondents have valid (i.e., non-missing)
+responses?*
+
+1149
+
+*How many thought they were subject to a time limit?*
+
+666
+
+*How many thought otherwise?*
+
+365
+
+*How many were unsure?*
+
+118
+
+*Finally, what explains why the number of valid responses is less than
+the number of people interviewed for the survey?* (Hint: examine
+variables fmi1 and fmi1a.)
+
+```{r fmi1a}
+# fmi1: currently receiving cash assistance
+# fmi1a: have received cash assistance
+
+# fmi1 table
+ftp_merged %>% 
+  # tabulate
+  count(fmi1) %>% 
+  # per survey page 48, question I1
+  # "1" = "Yes". "2" = "No", "8" = "Don't Know"
+  mutate(
+    fmi1 = case_when(
+      fmi1 == 1 ~ "Yes",
+      fmi1 == 2 ~ "No",
+      fmi1 == 8 ~ "I don't know",
+      is.na(fmi1) ~ "Missing"
+    )) %>% 
+  # make table
+  kable(col.names = c("Response", "Frequency"), caption = "Are you currently receiving cash assistance through AFDC, the WAGES program, or TANF?")
+
+# fmi1a table
+ftp_merged %>% 
+  # tabulate
+  count(fmi1a) %>% 
+  # per survey page 48, question I1a
+  # "1" = "Yes". "2" = "No", "8" = "Don't Know"
+  mutate(
+    fmi1a = case_when(
+      fmi1a == 1 ~ "Yes",
+      fmi1a == 2 ~ "No",
+      fmi1a == 8 ~ "I don't know",
+      is.na(fmi1a) ~ "Missing"
+    )) %>% 
+  # make table
+  kable(col.names = c("Response", "Frequency"), caption = "Have you ever received cash assistance since (RAD)?")
+```
+
+Only 230 people reported actively receiving cash assistance. Of the
+\~1500 people who did not report actively receiving cash assistance, 565
+people said they hadn't received any cash assistance since randomization
+(which could have occurred up to two years prior TK). Thus, many
+respondents may not have interacted with cash assistance programs
+recently and would not how to respond to this question.
+
+(3) *Define a new treatment dummy that is equal to one for people who
+    believed they were subject to a time limit and equal to zero for
+    those who did not or were not sure. Call it TLyes. Cross-tabulate
+    TLyes and the experimental dummy (“e”).*
+
+```{r tlyes}
+ftp_merged %<>%  
+  # add new treatment dummy TLyes
+  mutate(TLyes = 
+    case_when(
+      # 1 if believed subject to time limit
+      fmi2 == 1 ~ 1,
+      # 0 if did not or were not sure if subject to time limit
+      fmi2 == 2 ~ 0,
+      fmi2 == 8 ~ 0
+    )
+  )
+
+# cross-tabulate TLyes and e
+ftp_merged %>% 
+  # tabulate
+  count(TLyes, e) %>% 
+  # enhance readability of TLyes
+  mutate(
+    TLyes = case_when(
+      TLyes == 1 ~ "Answered Yes TL",
+      TLyes == 0 ~ "Answered No TL",
+    )) %>% 
+  # enhance readability of e
+  mutate(
+    e = case_when(
+      e == 1 ~ "e Treatment",
+      e == 0 ~ "e Control"
+    )
+  ) %>% 
+  # pivot into crosstab
+  pivot_wider(names_from = e, values_from = n) %>% 
+  # make table
+  kable(caption = "Cross-tabulating TLyes and e")
 
 ```
 
-(3) Define a new treatment dummy that is equal to one for people who believed they were
-subject to a time limit and equal to zero for those who did not or were not sure. Call it TLyes.
-Cross-tabulate TLyes and the experimental dummy (“e”). Discuss confusion about the time
-limit.
-(4) Using TLyes as your treatment indicator, estimate by OLS the effect of the time limit on theh
-number of months of welfare receipt during years 1-2 post_RA. To do this, estimate a
-regression of your dependent variable on TLyes and the set of control variables used by MDRC
-in their publications (the ones with the string “cova:” in their labels). Do you believe these
-regressions consistently estimate the effect of the time limit? Explain.
-(5) Provide conditions under which the experimental dummy would be a valid instrument for
-the time limit.
-(6) Estimate the first-stage regression of TLyes on e. Do you have a weak-instrument problem?
-(7) Use the experimental dummy as an instrument to estimate the effect of the time limit on
-the number of months of welfare receipt during years 1-2 post-RA. How do the welfare receipt
-results compare to the OLS estimates from question (4)? Can you summarize the direction of
-bias associated with the OLS estimates?
-(8) Explain why you would expect the exclusion condition to fail for the above regression.
-(9) Now estimate a model with age-group interactions, along the lines of what you did in PS 1.
-Define the same four age groups, and estimate the same model, but interact the age-group
-dummies with TLyes rather than e. Estimate the model by OLS. Omit the control variables.
-(10) Now estimate the same model, but use interactions between e and the age-group
-dummies as instruments for the interactions between TLyes and the age-group dummies.
-Comment on how estimating the model with age-group interactions helps to satisfy the
-exclusion restriction.
-(11) Discuss your estimated effects of time limits and how they compare with the estimates
-from question (9). Can you diagnose why the two sets of coefficients differ?
+*Discuss confusion about the time limit.*
+
+Approximately 25% of participants who were subject to time limits
+incorrectly believed they were not subject to time limits. Similarly,
+31% of participants who were not subject to time limits incorrectly
+believed they were subject to time limits.
+
+The inaccuracy of these beliefs is very relevant to this study, which
+seeks to understand how imposed time limits change the behavior of
+welfare recipients. If participants have inaccurate information about
+these time limits, their behaviors may differ from what would be
+expected if they had a more accurate understanding. Conclusions drawn
+from this study should thus consider how this confusion may confound our
+understanding of results.
+
+(4) *Using TLyes as your treatment indicator, estimate by OLS the effect
+    of the time limit on the number of months of welfare receipt during
+    years 1-2 post_RA. To do this, estimate a regression of your
+    dependent variable on TLyes and the set of control variables used by
+    MDRC in their publications (the ones with the string “cova:” in
+    their labels).*
+
+```{r ols-tlyes}
+
+```
+
+*Do you believe these regressions consistentl estimate the effect of the
+time limit? Explain.*
+
+(5) Provide conditions under which the experimental dummy would be a
+    valid instrument for the time limit.
+(6) Estimate the first-stage regression of TLyes on e. Do you have a
+    weak-instrument problem?
+(7) Use the experimental dummy as an instrument to estimate the effect
+    of the time limit on the number of months of welfare receipt during
+    years 1-2 post-RA. How do the welfare receipt results compare to the
+    OLS estimates from question (4)? Can you summarize the direction of
+    bias associated with the OLS estimates?
+(8) Explain why you would expect the exclusion condition to fail for the
+    above regression.
+(9) Now estimate a model with age-group interactions, along the lines of
+    what you did in PS 1. Define the same four age groups, and estimate
+    the same model, but interact the age-group dummies with TLyes rather
+    than e. Estimate the model by OLS. Omit the control variables.
+(10) Now estimate the same model, but use interactions between e and the
+     age-group dummies as instruments for the interactions between TLyes
+     and the age-group dummies. Comment on how estimating the model with
+     age-group interactions helps to satisfy the exclusion restriction.
+(11) Discuss your estimated effects of time limits and how they compare
+     with the estimates from question (9). Can you diagnose why the two
+     sets of coefficients differ?
