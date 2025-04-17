@@ -180,8 +180,6 @@ ftp_merged %<>%
   # remove rows where TLyes = NA
   filter(!is.na(TLyes))
 
-
-
 # cross-tabulate TLyes and e
 ftp_merged %>% 
   # tabulate
@@ -204,6 +202,8 @@ ftp_merged %>%
   # make table
   kable(caption = "Cross-tabulating TLyes and e")
 
+# cor(ftp_merged$TLyes, ftp_merged$e)
+
 ```
 
 *Discuss confusion about the time limit.*
@@ -217,9 +217,11 @@ The inaccuracy of these beliefs is very relevant to this study, which
 seeks to understand how imposed time limits change the behavior of
 welfare recipients. If participants have inaccurate information about
 these time limits, their behaviors may differ from what would be
-expected if they had a more accurate understanding. Conclusions drawn
-from this study should thus consider how this confusion may confound our
-understanding of results.
+expected if they had a more accurate understanding. 
+
+We should also consider that a person's understanding of time limits may be related to some unobservable trait that also affects their welfare use. 
+
+Before drawing conclusions from this study, we should thus consider how this confusion may confound our understanding of results.
 
 (4) *Using TLyes as your treatment indicator, estimate by OLS the effect
     of the time limit on the number of months of welfare receipt during
@@ -262,26 +264,48 @@ formula <- as.formula(paste(
 
 model <- lm(formula, data = ftp_merged)
 
-# summary(model)
-
 # regress nmrecyr12 on TLyes and set of control variables
 
-stargazer(model, title = "Results", type = "html")
-
-# summary(lm(formula, data = ftp_merged))
+stargazer(model, title = "Results", type = "text")
 
 ```
 
 *Do you believe these regressions consistently estimate the effect of the
 time limit? Explain.*
 
-The coefficient of TLyes is 0.389, which is positive but not statistically significant. 
+These regressions do not consistently estimate the effect of the time limit. "TLyes" is not exogenous, as it is not randomly assigned but rather based on someone's perception of their time limits. "TLyes" may thus be correlated to some unobservables, such as understanding complex welfare program communications, which could also impact the outcome (number of months on welfare).
+Regression estimates of the effects of the perception of having a time limit are thus unlikely to be unbiased or consistent.
 
 
 (5) Provide conditions under which the experimental dummy would be a
     valid instrument for the time limit.
+1. SUTVA
+2. Exclusion Restriction: The only thing impacting Y is the treatment (experimental dummy)
+3. Instrument Assumption: 
+4. Monotonicity Assumption: Everyone who is assigned to treatment takes up treatment, and those who are assigned to control do not take up treatment.
+
+
+
+
+TK THIS IS WRONG! TLyes is not the experimental dummy!
+
+TLyes would be a valid instrument for the time limit if it met the following two conditions:
+Exclusion Restriction and Instrument Condition. The Exclusion Restriction requires that Z (TLyes) is exogenous (has no covariance with the unobserved errors term), meaning that TLyes can only impact the outcome through D (e). The instrument condition requires that Z is correlated with D (TLyes correlated with e). This means that TLyes must be related to someone's random treatment assignment.
+    
+```{r q5}
+# tk idk if we need this 
+
+# cor(ftp_merged$TLyes, ftp_merged$e)
+```
+    
+    
 (6) Estimate the first-stage regression of TLyes on e. Do you have a
     weak-instrument problem?
+    
+```{r 1st stage}
+
+```
+    
 (7) Use the experimental dummy as an instrument to estimate the effect
     of the time limit on the number of months of welfare receipt during
     years 1-2 post-RA. How do the welfare receipt results compare to the

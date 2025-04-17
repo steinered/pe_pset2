@@ -1155,29 +1155,32 @@ F Statistic
 <pre class="r"><code># summary(lm(formula, data = ftp_merged))</code></pre>
 <p><em>Do you believe these regressions consistently estimate the effect
 of the time limit? Explain.</em></p>
+<p>The coefficient of TLyes is 0.389, which is positive but not
+statistically significant.</p>
 <ol start="5" style="list-style-type: decimal">
-<li>Provide conditions under which the experimental dummy would be a
-valid instrument for the time limit.</li>
-<li>Estimate the first-stage regression of TLyes on e. Do you have a
-weak-instrument problem?</li>
-<li>Use the experimental dummy as an instrument to estimate the effect
-of the time limit on the number of months of welfare receipt during
-years 1-2 post-RA. How do the welfare receipt results compare to the OLS
-estimates from question (4)? Can you summarize the direction of bias
-associated with the OLS estimates?</li>
-<li>Explain why you would expect the exclusion condition to fail for the
-above regression.</li>
-<li>Now estimate a model with age-group interactions, along the lines of
-what you did in PS 1. Define the same four age groups, and estimate the
-same model, but interact the age-group dummies with TLyes rather than e.
-Estimate the model by OLS. Omit the control variables.</li>
-<li>Now estimate the same model, but use interactions between e and the
-age-group dummies as instruments for the interactions between TLyes and
-the age-group dummies. Comment on how estimating the model with
-age-group interactions helps to satisfy the exclusion restriction.</li>
-<li>Discuss your estimated effects of time limits and how they compare
-with the estimates from question (9). Can you diagnose why the two sets
-of coefficients differ?</li>
+<li><p>Provide conditions under which the experimental dummy would be a
+valid instrument for the time limit.</p></li>
+<li><p>Estimate the first-stage regression of TLyes on e. Do you have a
+weak-instrument problem?</p></li>
+<li><p>Use the experimental dummy as an instrument to estimate the
+effect of the time limit on the number of months of welfare receipt
+during years 1-2 post-RA. How do the welfare receipt results compare to
+the OLS estimates from question (4)? Can you summarize the direction of
+bias associated with the OLS estimates?</p></li>
+<li><p>Explain why you would expect the exclusion condition to fail for
+the above regression.</p></li>
+<li><p>Now estimate a model with age-group interactions, along the lines
+of what you did in PS 1. Define the same four age groups, and estimate
+the same model, but interact the age-group dummies with TLyes rather
+than e. Estimate the model by OLS. Omit the control variables.</p></li>
+<li><p>Now estimate the same model, but use interactions between e and
+the age-group dummies as instruments for the interactions between TLyes
+and the age-group dummies. Comment on how estimating the model with
+age-group interactions helps to satisfy the exclusion
+restriction.</p></li>
+<li><p>Discuss your estimated effects of time limits and how they
+compare with the estimates from question (9). Can you diagnose why the
+two sets of coefficients differ?</p></li>
 </ol>
 
 
