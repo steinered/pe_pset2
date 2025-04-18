@@ -11,7 +11,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE, results='hide'}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 
 # load packages
 library("haven")
@@ -21,6 +21,7 @@ library('knitr')
 library('kableExtra')
 library("stringr")
 library("stargazer")
+library("ivreg")
 # library("sandwich")
 # library("broom")
 # library("lmtest")
@@ -92,28 +93,30 @@ ftp_merged %>%
       is.na(fmi2) ~ "Missing"
     )) %>% 
   # make table
-  kable(col.names = c("Response", "Frequency"), caption = "(Is/Was) there a time limit on how long you (are/were) allowed to receive cash assistance?")
+  kable(col.names = c("Response", "Frequency"), caption = "FMI2. (Is/Was) there a time limit on how long you (are/were) allowed to receive cash assistance?") %>% 
+  # set style 
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-*How many of the survey respondents have valid (i.e., non-missing)
+*2a. How many of the survey respondents have valid (i.e., non-missing)
 responses?*
 
-1149
+1149 (Total 1729 minus 580 NA)
 
-*How many thought they were subject to a time limit?*
+*2b. How many thought they were subject to a time limit?*
 
 666
 
-*How many thought otherwise?*
+*2c. How many thought otherwise?*
 
-365
+365xw
 
-*How many were unsure?*
+*2d. How many were unsure?*
 
 118
 
-*Finally, what explains why the number of valid responses is less than
-the number of people interviewed for the survey?* (Hint: examine
+*2e. Finally, what explains why the number of valid responses is less
+than the number of people interviewed for the survey?* (Hint: examine
 variables fmi1 and fmi1a.)
 
 ```{r fmi1a}
@@ -134,7 +137,9 @@ ftp_merged %>%
       is.na(fmi1) ~ "Missing"
     )) %>% 
   # make table
-  kable(col.names = c("Response", "Frequency"), caption = "Are you currently receiving cash assistance through AFDC, the WAGES program, or TANF?")
+  kable(col.names = c("Response", "Frequency"), caption = "FM1. Are you currently receiving cash assistance through AFDC, the WAGES program, or TANF?") %>% 
+  # set style 
+  kable_styling(bootstrap_options = c("striped", "hover"))
 
 # fmi1a table
 ftp_merged %>% 
@@ -150,14 +155,16 @@ ftp_merged %>%
       is.na(fmi1a) ~ "Missing"
     )) %>% 
   # make table
-  kable(col.names = c("Response", "Frequency"), caption = "Have you ever received cash assistance since (RAD)?")
+  kable(col.names = c("Response", "Frequency"), caption = "FM1a. Have you ever received cash assistance since (RAD)?") %>% 
+  # set style 
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Only 230 people reported actively receiving cash assistance. Of the
-\~1500 people who did not report actively receiving cash assistance, 565
-people said they hadn't received any cash assistance since randomization
-(which could have occurred up to two years prior TK). Thus, many
-respondents may not have interacted with cash assistance programs
+approximately 1500 people who did not report actively receiving cash
+assistance, 565 people said they hadn't received any cash assistance
+since randomization (which occurred at least 3.5 years prior). Thus,
+many respondents may not have interacted with cash assistance programs
 recently and would not how to respond to this question.
 
 (3) *Define a new treatment dummy that is equal to one for people who
@@ -178,6 +185,7 @@ ftp_merged %<>%
     )
   ) %>% 
   # remove rows where TLyes = NA
+  # per Ed discussion board #25
   filter(!is.na(TLyes))
 
 # cross-tabulate TLyes and e
@@ -200,13 +208,15 @@ ftp_merged %>%
   # pivot into crosstab
   pivot_wider(names_from = e, values_from = n) %>% 
   # make table
-  kable(caption = "Cross-tabulating TLyes and e")
+  kable(caption = "Cross-tabulating TLyes and e") %>% 
+  # set style 
+  kable_styling(bootstrap_options = c("striped", "hover"))
 
 # cor(ftp_merged$TLyes, ftp_merged$e)
 
 ```
 
-*Discuss confusion about the time limit.*
+*3a. Discuss confusion about the time limit.*
 
 Approximately 25% of participants who were subject to time limits
 incorrectly believed they were not subject to time limits. Similarly,
@@ -217,11 +227,14 @@ The inaccuracy of these beliefs is very relevant to this study, which
 seeks to understand how imposed time limits change the behavior of
 welfare recipients. If participants have inaccurate information about
 these time limits, their behaviors may differ from what would be
-expected if they had a more accurate understanding. 
+expected if they had a more accurate understanding.
 
-We should also consider that a person's understanding of time limits may be related to some unobservable trait that also affects their welfare use. 
+We should also consider that a person's understanding of time limits may
+be related to some unobservable trait that also affects their welfare
+use.
 
-Before drawing conclusions from this study, we should thus consider how this confusion may confound our understanding of results.
+Before drawing conclusions from this study, we should thus consider how
+this confusion may confound our understanding of results.
 
 (4) *Using TLyes as your treatment indicator, estimate by OLS the effect
     of the time limit on the number of months of welfare receipt during
@@ -254,73 +267,266 @@ covas <- ftp_merged %>%
     }))  %>% 
   colnames()
 
+# removing "yrearnsq" because it is collinear with "yrearn" and causes a singular matrix issue
+covas %<>% keep(~.x !="yrearnsq")
+
 # write formula for nmrecyr12 regressed on TLyes and control variables (covas)
-formula <- as.formula(paste(
+q4formula <- as.formula(paste(
   # nmrecyr12 regressed on TLyes and...
   "nmrecyr12 ~ TLyes+", 
   # list covas as string, separated by +
   paste(covas, collapse = " + ")))
 
 
-model <- lm(formula, data = ftp_merged)
+q4model <- lm(q4formula, data = ftp_merged)
 
 # regress nmrecyr12 on TLyes and set of control variables
 
-stargazer(model, title = "Results", type = "text")
+stargazer(q4model, title = "Regression on TLYes Results", type = "html")
 
 ```
 
-*Do you believe these regressions consistently estimate the effect of the
-time limit? Explain.*
+*4a. Do you believe these regressions consistently estimate the effect
+of the time limit? Explain.*
 
-These regressions do not consistently estimate the effect of the time limit. "TLyes" is not exogenous, as it is not randomly assigned but rather based on someone's perception of their time limits. "TLyes" may thus be correlated to some unobservables, such as understanding complex welfare program communications, which could also impact the outcome (number of months on welfare).
-Regression estimates of the effects of the perception of having a time limit are thus unlikely to be unbiased or consistent.
+These regressions do not consistently estimate the effect of the time
+limit. "TLyes" is not exogenous, as it is not randomly assigned but
+rather based on someone's perception of their time limits. "TLyes" may
+thus be correlated to some unobservables, such as understanding complex
+welfare program communications, which could also impact the outcome
+(number of months on welfare). It is also correlated to the experimental
+dummy, which will be shown in future questions. Regression estimates of
+the effects of the perception of having a time limit are thus unlikely
+to be unbiased or consistent.
 
+(5) *Provide conditions under which the experimental dummy would be a
+    valid instrument for the time limit.*
 
-(5) Provide conditions under which the experimental dummy would be a
-    valid instrument for the time limit.
-1. SUTVA
-2. Exclusion Restriction: The only thing impacting Y is the treatment (experimental dummy)
-3. Instrument Assumption: 
-4. Monotonicity Assumption: Everyone who is assigned to treatment takes up treatment, and those who are assigned to control do not take up treatment.
+The experimental dummy would be a valid instrument for the time limit if
+it satisfies the following 4 assumptions: Stable Unit Treatment Value
+Assumption (there are no spillover effects between individuals), the
+exclusion restriction (the experimental dummy, e, can only impact the
+outcome *through* TLyes), the instrument assumption (random assignment
+to time limit impacts someone's perception of the time limit), and the
+monotonicity assumption (no one believes they are subject to a time
+limit only if they don't receive one).
 
+(6) *Estimate the first-stage regression of TLyes on e.*
 
+```{r first stage, results = 'asis'}
+# to calculate the first-stage, regress the treatment dummy on the instrument
 
+first_stage <- lm(TLyes ~ e, data = ftp_merged)
 
-TK THIS IS WRONG! TLyes is not the experimental dummy!
+stargazer(first_stage, title = "First-Stage Results", type = "html")
 
-TLyes would be a valid instrument for the time limit if it met the following two conditions:
-Exclusion Restriction and Instrument Condition. The Exclusion Restriction requires that Z (TLyes) is exogenous (has no covariance with the unobserved errors term), meaning that TLyes can only impact the outcome through D (e). The instrument condition requires that Z is correlated with D (TLyes correlated with e). This means that TLyes must be related to someone's random treatment assignment.
-    
-```{r q5}
-# tk idk if we need this 
-
-# cor(ftp_merged$TLyes, ftp_merged$e)
 ```
-    
-    
-(6) Estimate the first-stage regression of TLyes on e. Do you have a
-    weak-instrument problem?
-    
-```{r 1st stage}
 
-```
-    
-(7) Use the experimental dummy as an instrument to estimate the effect
+*6a. Do you have a weak-instrument problem?*
+
+This regression tells us that being randomly assigned to the time limit
+(e) increases the probability of perceiving a time limit (TLyes) by
+about 44.5 percentage points. This is significant at the 0.01 level,
+suggesting strong evidence that e is correlated with TLyes. The
+F-statistic is 291.8, which is much larger than 10 and is statistically
+significant. This regression confirms that we do not have a weak
+instrument problem.
+
+(7) *Use the experimental dummy as an instrument to estimate the effect
     of the time limit on the number of months of welfare receipt during
-    years 1-2 post-RA. How do the welfare receipt results compare to the
-    OLS estimates from question (4)? Can you summarize the direction of
-    bias associated with the OLS estimates?
-(8) Explain why you would expect the exclusion condition to fail for the
-    above regression.
-(9) Now estimate a model with age-group interactions, along the lines of
-    what you did in PS 1. Define the same four age groups, and estimate
-    the same model, but interact the age-group dummies with TLyes rather
-    than e. Estimate the model by OLS. Omit the control variables.
-(10) Now estimate the same model, but use interactions between e and the
-     age-group dummies as instruments for the interactions between TLyes
-     and the age-group dummies. Comment on how estimating the model with
-     age-group interactions helps to satisfy the exclusion restriction.
+    years 1-2 post-RA.*
+
+```{r experimental dummy 2SLS, results = 'asis'}
+# estimate the effect of the time limit on the number of months of welfare receipt
+
+# write ivformula for nmrecyr12 regressed on TLyes and control variables (covas), using e as instrument
+ivformula <- as.formula(paste(
+  # nmrecyr12 regressed on TLyes and...
+  "nmrecyr12 ~ TLyes +", 
+  # covariates
+  paste(covas, collapse = " + "),
+  # given e as instrument and...
+  " | e +",
+  # covariates
+  paste(covas, collapse = " + ")
+  ))
+
+ivmodel <- ivreg(ivformula, data = ftp_merged)
+
+stargazer(q4model, ivmodel, title = "OLS vs IV 2SLS", type = "html")
+```
+
+*7a. How do the welfare receipt results compare to the OLS estimates
+from question (4)? Can you summarize the direction of bias associated
+with the OLS estimates?*
+
+The OLS estimates from question 4 are positive, indicating that people
+who believed they were under a time limit would see an increase in
+number of months receiving welfare. The IV results are negative,
+indicating that a perceived time limit on welfare would reduce the
+number of months receiving welfare. The standard error is also much
+larger for the IV.
+
+This implies that OLS biases upwards, as the estimate is more positive
+than the IV.
+
+(8) *Explain why you would expect the exclusion condition to fail for
+    the above regression.*
+
+The exclusion restriction requires that Z (the experimental dummy)
+cannot impact the outcome directly, but rather through D (TLyes) alone.
+However, this is likely not the case. Even if someone does not perceive
+themselves to be under the time limit, the time limit would still limit
+the number of months that the participant receives welfare.
+
+We also know that the FTP program included additional components such as
+financial work incentives and enhanced services. So even if someone is
+not aware that they're on a time limit, other components of the program
+could be impacting the observed outcome.
+
+As the experimental dummy would directly impact the outcome outside of
+TLyes, it thus fails the exclusion condition.
+
+(9) *Now estimate a model with age-group interactions, along the lines
+    of what you did in PS 1. Define the same four age groups, and
+    estimate the same model, but interact the age-group dummies with
+    TLyes rather than e. Estimate the model by OLS. Omit the control
+    variables.*
+
+I was unsure if "the same model" meant the same "number of months of
+AFDC receipt and Food Stamp receipt, and number of quarters of
+employment" or the "number of months of welfare receipt during years 1-2
+post_RA". I assumed the former.
+
+```{r outcome var creation}
+# adding outcome variables of interest to data set
+
+# number of months receiving afdc created earlier (nmrecyr12)
+
+ftp_merged %<>% 
+  # number of months food stamp receipt
+  mutate(nmfs12 = 
+           # number of months y1 + number of months y2
+           krfsc2t5 + krfsc6t9) %>% 
+  # number of quarters of employment
+   mutate(nqemp12 = 
+            # number of quarters y1 + number of quarter y2
+            kempq2t5 + kempq6t9
+  )
+```
+
+```{r age group creation}
+# 4 age groups: less than 3, 3-8, 9-14 (36mo) or 9-15 (24mo), 15-19 (36mo) or 16-19 (24mo)
+
+# alter ftp_merged
+ftp_merged %<>% 
+  # adding age group indicators
+  mutate(
+    # age group 1: less than 3
+    ag1 = ifelse(yngchage <3, 1, 0),
+    # age group 2: 3-8
+    ag2 = ifelse(yngchage >= 3 & yngchage <9, 1, 0),
+    # age group 3: 9-14 36mo, 9-15 24mo
+    ag3 = ifelse(
+      # children 9 or older and under 15 (9-14) 
+      (yngchage >=9 & yngchage < 15 &
+         # if time limit = 36 months (imputed for control)
+         ((TLyes == 0 & bf_clk36 == 1) | (TLyes == 1 & l_clk36 == 1)))
+      # OR children 9 or older and under 16 (9-15)
+      |( yngchage >=9 & yngchage < 16) &
+        # if time limit = 24 months (imputed for controls)
+        ((TLyes == 0 & bf_clk24 == 1) | (TLyes == 1 & l_clk24 == 1)), 1, 0),
+    # age group 4: 15-19 36mo, 16-19 24mo
+    ag4 = ifelse(
+      # children 15 or older and under 20 (15-19)
+      (yngchage >=15 & yngchage < 20 &
+         # if time limit = 36 months (imputed for control)
+         ((TLyes == 0 & bf_clk36 == 1) | (TLyes == 1 & l_clk36 == 1))) 
+      # OR children 16 or older and under 20 (16-19)
+      |( yngchage >=16 & yngchage < 20) &
+        # if time limit = 24 months (imputed for controls)
+    ((TLyes == 0 & bf_clk24 == 1) | (TLyes == 1 & l_clk24 == 1)), 1, 0)) %>% 
+  # and adding age group-treatment interactions
+  mutate(
+    tl1 = TLyes * ag1,
+    tl2 = TLyes * ag2,
+    tl3 = TLyes * ag3,
+    tl4 = TLyes * ag4
+  )
+
+```
+
+```{r age group model nmrecyr, results = 'asis'}
+# models by outcome
+lm_afdc <- lm(nmrecyr12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+
+lm_fs <- lm(nmfs12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+
+lm_emp <-lm(nqemp12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+
+stargazer(lm_afdc, lm_fs, lm_emp, type = "html")
+
+```
+
+
+
+
+
+
+(10) *Now estimate the same model, but use interactions between e and
+     the age-group dummies as instruments for the interactions between
+     TLyes and the age-group dummies. Comment on how estimating the
+     model with age-group interactions helps to satisfy the exclusion
+     restriction.*
+
+```{r IV age group model nmrecyr12, results = 'asis', include = FALSE}
+# estimate the effect of the time limit on the number of months of welfare receipt
+# 
+# ivmodelag1 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag1)
+# ivmodelag2 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag2)
+# ivmodelag3 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag3)
+# ivmodelag4 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag4)
+# 
+# stargazer(ivmodelag1, ivmodelag2, ivmodelag3, ivmodelag4, title = "IV 2SLS by age group", type = "html")
+```
+
 (11) Discuss your estimated effects of time limits and how they compare
      with the estimates from question (9). Can you diagnose why the two
      sets of coefficients differ?
+
+<!-- -->
+
+1.  SUTVA
+2.  Exclusion Restriction: The only thing impacting Y is the treatment
+    (experimental dummy)
+3.  Instrument Assumption:
+4.  Monotonicity Assumption: Everyone who is assigned to treatment takes
+    up treatment, and those who are assigned to control do not take up
+    treatment.
+
+is exogenous (meaning it has no covariance with the error term). It
+would be a valid instrument if it is correlated with the treatment
+status, which in this case we are considering to be TLyes. The
+
+all participants assigned to the time limit (treatment) believed they
+were assigned to the time limit, and those who were not subject to a
+time limit did not believe they were subject to a time limit. This would
+imply 0 control substitution or program attrition, as no one in control
+is wrongfully behaving as if they have a time limit and no one with a
+time limit is wrongfully behaving as if they don't.
+
+Alternatively, if we believe that experimental assignment alone impacts
+the outcome (i.e. nothing else, including perception of an imposed time
+limit, changes a participants behavior), then it would be a valid
+instrument for the time limit.
+
+TK THIS IS WRONG! TLyes is not the experimental dummy!
+
+TLyes would be a valid instrument for the time limit if it met the
+following two conditions: Exclusion Restriction and Instrument
+Condition. The Exclusion Restriction requires that Z (TLyes) is
+exogenous (has no covariance with the unobserved errors term), meaning
+that TLyes can only impact the outcome through D (e). The instrument
+condition requires that Z is correlated with D (TLyes correlated with
+e). This means that TLyes must be related to someone's random treatment
+assignment.
