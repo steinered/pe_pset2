@@ -22,27 +22,11 @@ library('kableExtra')
 library("stringr")
 library("stargazer")
 library("ivreg")
-# library("sandwich")
-# library("broom")
-# library("lmtest")
-# library("car")
 
 
 # get rid of scientific notation
 options(scipen=999)
 ```
-
-In this problem set, we continue analyzing the FTP program, but we
-reinterpret treatment status. In FTP, as in other programs, there was
-confusion among respondents about whether they were subject to a time
-limit. For the purposes of this problem set, we will consider
-respondents who said that they were subject to a time limited as
-treated, and those who said they were not as controls. Our goal will be
-to estimate the effect of a perceived time limit on welfare receipt,
-employment, and the like. The idea is that you cannot be influenced by a
-time limit if you don’t believe it applies to you, whether or not it
-applies to you in fact. All data and documentation can be found on
-Canvas under Problem Set 1.
 
 (1) *The question about the time limit comes from the four-year survey,
     the results of which are contained in the file ftp_srv.dta. Start by
@@ -109,7 +93,7 @@ responses?*
 
 *2c. How many thought otherwise?*
 
-365xw
+365
 
 *2d. How many were unsure?*
 
@@ -248,10 +232,14 @@ this confusion may confound our understanding of results.
 # create variable which equals number of months on welfare receipt during years 1-2 post_RA
 
 ftp_merged %<>%
-  # variable = number of months rec welfare y1-2 (nmrecyr12)
+  # variable = number of months rec afdc y1-2 (nmrecyr12)
   mutate(nmrecyr12 = 
            # number of months y1 + number of months y2
-           krecc2t5 + krecc6t9)
+           krecc2t5 + krecc6t9) %>% 
+  # number of months food stamp receipt
+  mutate(nmfs12 = 
+           # number of months y1 + number of months y2
+           krfsc2t5 + krfsc6t9)
 
 # identify covas columns
 # pulled from pset1
@@ -271,18 +259,29 @@ covas <- ftp_merged %>%
 covas %<>% keep(~.x !="yrearnsq")
 
 # write formula for nmrecyr12 regressed on TLyes and control variables (covas)
-q4formula <- as.formula(paste(
+q4formulaafdc <- as.formula(paste(
   # nmrecyr12 regressed on TLyes and...
   "nmrecyr12 ~ TLyes+", 
   # list covas as string, separated by +
   paste(covas, collapse = " + ")))
 
 
-q4model <- lm(q4formula, data = ftp_merged)
+q4modelafdc <- lm(q4formulaafdc, data = ftp_merged)
 
 # regress nmrecyr12 on TLyes and set of control variables
 
-stargazer(q4model, title = "Regression on TLYes Results", type = "html")
+q4formulafs <- as.formula(paste(
+  # fs regressed on TLyes and...
+  "nmfs12 ~ TLyes+", 
+  # list covas as string, separated by +
+  paste(covas, collapse = " + ")))
+
+
+q4modelfs <- lm(q4formulafs, data = ftp_merged)
+
+# regress nmrecyr12 on TLyes and set of control variables
+
+stargazer(q4modelafdc, q4modelfs, title = "Regression on TLYes Results", column.labels = c("AFDC receipt", "Food Stamp receipt"), type = "html")
 
 ```
 
@@ -340,7 +339,7 @@ instrument problem.
 # estimate the effect of the time limit on the number of months of welfare receipt
 
 # write ivformula for nmrecyr12 regressed on TLyes and control variables (covas), using e as instrument
-ivformula <- as.formula(paste(
+ivformulaafdc <- as.formula(paste(
   # nmrecyr12 regressed on TLyes and...
   "nmrecyr12 ~ TLyes +", 
   # covariates
@@ -351,9 +350,23 @@ ivformula <- as.formula(paste(
   paste(covas, collapse = " + ")
   ))
 
-ivmodel <- ivreg(ivformula, data = ftp_merged)
+ivmodelafdc <- ivreg(ivformulaafdc, data = ftp_merged)
 
-stargazer(q4model, ivmodel, title = "OLS vs IV 2SLS", type = "html")
+ivformulafs <- as.formula(paste(
+  # nmfs12 regressed on TLyes and...
+  "nmfs12 ~ TLyes +", 
+  # covariates
+  paste(covas, collapse = " + "),
+  # given e as instrument and...
+  " | e +",
+  # covariates
+  paste(covas, collapse = " + ")
+  ))
+
+ivmodelfs <- ivreg(ivformulafs, data = ftp_merged)
+
+
+stargazer(q4modelafdc, ivmodelafdc, q4modelfs, ivmodelfs, title = "OLS vs IV 2SLS", type = "html")
 ```
 
 *7a. How do the welfare receipt results compare to the OLS estimates
@@ -379,13 +392,15 @@ However, this is likely not the case. Even if someone does not perceive
 themselves to be under the time limit, the time limit would still limit
 the number of months that the participant receives welfare.
 
-We also know that the FTP program included additional components such as
-financial work incentives and enhanced services. So even if someone is
-not aware that they're on a time limit, other components of the program
-could be impacting the observed outcome.
+As relevant to this problem set, there may also be heterogenous
+treatment effects. The IV and OLS models above don't allow for differing
+effects among different subgroups. As such, the instrument is not fully
+exogenous as it may include additional effects due to subgroup
+characteristics.
 
-As the experimental dummy would directly impact the outcome outside of
-TLyes, it thus fails the exclusion condition.
+The experimental dummy is thus endogenous and/or would directly impact
+the outcome outside of TLyes, it therefore fails the exclusion
+condition.
 
 (9) *Now estimate a model with age-group interactions, along the lines
     of what you did in PS 1. Define the same four age groups, and
@@ -393,21 +408,12 @@ TLyes, it thus fails the exclusion condition.
     TLyes rather than e. Estimate the model by OLS. Omit the control
     variables.*
 
-I was unsure if "the same model" meant the same "number of months of
-AFDC receipt and Food Stamp receipt, and number of quarters of
-employment" or the "number of months of welfare receipt during years 1-2
-post_RA". I assumed the former.
-
 ```{r outcome var creation}
 # adding outcome variables of interest to data set
 
 # number of months receiving afdc created earlier (nmrecyr12)
 
 ftp_merged %<>% 
-  # number of months food stamp receipt
-  mutate(nmfs12 = 
-           # number of months y1 + number of months y2
-           krfsc2t5 + krfsc6t9) %>% 
   # number of quarters of employment
    mutate(nqemp12 = 
             # number of quarters y1 + number of quarter y2
@@ -445,8 +451,10 @@ ftp_merged %<>%
       # OR children 16 or older and under 20 (16-19)
       |( yngchage >=16 & yngchage < 20) &
         # if time limit = 24 months (imputed for controls)
-    ((TLyes == 0 & bf_clk24 == 1) | (TLyes == 1 & l_clk24 == 1)), 1, 0)) %>% 
-  # and adding age group-treatment interactions
+    ((TLyes == 0 & bf_clk24 == 1) | (TLyes == 1 & l_clk24 == 1)), 1, 0)) %>%
+  # and filter out nas
+  filter(!is.na(ag1 + ag2 + ag3 + ag4)) %>% 
+   # and adding age group-treatment interactions
   mutate(
     tl1 = TLyes * ag1,
     tl2 = TLyes * ag2,
@@ -464,69 +472,62 @@ lm_fs <- lm(nmfs12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3, data = ftp_merge
 
 lm_emp <-lm(nqemp12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3, data = ftp_merged)
 
-stargazer(lm_afdc, lm_fs, lm_emp, type = "html", title = "OLS regression on TLyes by age group", column.labels = c("Months AFDC", "Months Food Stamps", "Quarters Employed"), covariate.labels = c("TLyes", "Group 1", "Group 2", "Group 3", "Trt x Group 1", "Trt x Group 2", "Trt x Group 3"))
+stargazer(lm_afdc, lm_fs, lm_emp, type = "html", title = "OLS regression on TLyes by age group", column.labels = c("AFDC  ", "Food Stamps  ", "Employed"), covariate.labels = c("TLyes", "Group 1", "Group 2", "Group 3", "Trt x Group 1", "Trt x Group 2", "Trt x Group 3"))
 
 ```
-
-
-
-
-
 
 (10) *Now estimate the same model, but use interactions between e and
      the age-group dummies as instruments for the interactions between
-     TLyes and the age-group dummies. Comment on how estimating the
-     model with age-group interactions helps to satisfy the exclusion
-     restriction.*
+     TLyes and the age-group dummies.*
 
-```{r IV age group model nmrecyr12, results = 'asis', include = FALSE}
-# estimate the effect of the time limit on the number of months of welfare receipt
-# 
-# ivmodelag1 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag1)
-# ivmodelag2 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag2)
-# ivmodelag3 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag3)
-# ivmodelag4 <- ivreg(nmrecyr12 ~ TLyes | e, data = ag4)
-# 
-# stargazer(ivmodelag1, ivmodelag2, ivmodelag3, ivmodelag4, title = "IV 2SLS by age group", type = "html")
+```{r age group instruments, results = 'asis'}
+# models by outcome
+iv_afdc <- ivreg(nmrecyr12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3 | e + ag1 + ag2 + ag3 + (e*ag1) + (e*ag2) + (e*ag3), data = ftp_merged)
+
+iv_fs <- ivreg(nmfs12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3 | e + ag1 + ag2 + ag3 + (e*ag1) + (e*ag2) + (e*ag3), data = ftp_merged)
+
+iv_emp <-ivreg(nqemp12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3 | e + ag1 + ag2 + ag3 + (e*ag1) + (e*ag2) + (e*ag3), data = ftp_merged)
+
+stargazer(lm_afdc, iv_afdc, lm_fs, iv_fs, lm_emp, iv_emp, type = "html", title = "IV v OLS on TLyes by age group", column.labels = c("AFDC", "AFDC", "Food Stamps  ", "Food Stamps  ", "Employed", "Employed"), covariate.labels = c("TLyes", "Group 1", "Group 2", "Group 3", "Trt x Group 1", "Trt x Group 2", "Trt x Group 3"))
+
 ```
 
-(11) Discuss your estimated effects of time limits and how they compare
+*10a. Comment on how estimating the model with age-group interactions
+helps to satisfy the exclusion restriction.*
+
+The exclusion restriction requires that the instrument (age-group
+interactions with e) only impact the outcome via the endogenous variable
+(age-group interactions with TLyes). This instrument isolates the impact
+of actual time limit exposure on each age group, not perceived time
+limit exposure on each group.
+
+Estimating the model with age-group interactions allows for a more
+heterogeneous treatment effect. The model can thus better predict the
+treatment effect by age group, and consequently more closely identify
+the exogenous variation caused by the instrument. Isolating the
+instruments impact allows the model to satisfy the exclusion
+restriction, as we can be more sure that the instrument is not
+endogenous.
+
+(11) *Discuss your estimated effects of time limits and how they compare
      with the estimates from question (9). Can you diagnose why the two
-     sets of coefficients differ?
+     sets of coefficients differ?*
 
-<!-- -->
+For AFDC receipt, the IV model predicts the same sign as the OLS model,
+but the magnitude varies. For example, the IV model predicts a smaller
+decrease in number of months receiving AFDC than OLS among treatment
+interactions with age group 1. But age groups 2 and 3 see a greater
+decrease in the number of months receiving AFDC in the IV model.
 
-1.  SUTVA
-2.  Exclusion Restriction: The only thing impacting Y is the treatment
-    (experimental dummy)
-3.  Instrument Assumption:
-4.  Monotonicity Assumption: Everyone who is assigned to treatment takes
-    up treatment, and those who are assigned to control do not take up
-    treatment.
+For FS receipt, the IV model follows a similar pattern to AFDC receipt.
+The model of the treatment-age group interaction for group 1 shows a
+very slight increase, while groups 2 and 3 show a very large decrease in
+the IV model as compared to OLS.
 
-is exogenous (meaning it has no covariance with the error term). It
-would be a valid instrument if it is correlated with the treatment
-status, which in this case we are considering to be TLyes. The
+For employment, the IV model shows a small positive increase among the
+treatment-age group interactions for group 1 and 2, but a minor decrease
+for group 3.
 
-all participants assigned to the time limit (treatment) believed they
-were assigned to the time limit, and those who were not subject to a
-time limit did not believe they were subject to a time limit. This would
-imply 0 control substitution or program attrition, as no one in control
-is wrongfully behaving as if they have a time limit and no one with a
-time limit is wrongfully behaving as if they don't.
-
-Alternatively, if we believe that experimental assignment alone impacts
-the outcome (i.e. nothing else, including perception of an imposed time
-limit, changes a participants behavior), then it would be a valid
-instrument for the time limit.
-
-TK THIS IS WRONG! TLyes is not the experimental dummy!
-
-TLyes would be a valid instrument for the time limit if it met the
-following two conditions: Exclusion Restriction and Instrument
-Condition. The Exclusion Restriction requires that Z (TLyes) is
-exogenous (has no covariance with the unobserved errors term), meaning
-that TLyes can only impact the outcome through D (e). The instrument
-condition requires that Z is correlated with D (TLyes correlated with
-e). This means that TLyes must be related to someone's random treatment
-assignment.
+We can assume these two sets of coefficients differ because the
+instrument is more accurately isolating the effect of the time limits,
+while OLS is regressing on the endogenous variable TLyes.
