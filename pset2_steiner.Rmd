@@ -458,13 +458,13 @@ ftp_merged %<>%
 
 ```{r age group model nmrecyr, results = 'asis'}
 # models by outcome
-lm_afdc <- lm(nmrecyr12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+lm_afdc <- lm(nmrecyr12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3, data = ftp_merged)
 
-lm_fs <- lm(nmfs12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+lm_fs <- lm(nmfs12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3, data = ftp_merged)
 
-lm_emp <-lm(nqemp12 ~ TLyes + ag1 + ag2 + ag3 + ag4 + tl1 + tl2 + tl3 + tl4, data = ftp_merged)
+lm_emp <-lm(nqemp12 ~ TLyes + ag1 + ag2 + ag3 + tl1 + tl2 + tl3, data = ftp_merged)
 
-stargazer(lm_afdc, lm_fs, lm_emp, type = "html")
+stargazer(lm_afdc, lm_fs, lm_emp, type = "html", title = "OLS regression on TLyes by age group", column.labels = c("Months AFDC", "Months Food Stamps", "Quarters Employed"), covariate.labels = c("TLyes", "Group 1", "Group 2", "Group 3", "Trt x Group 1", "Trt x Group 2", "Trt x Group 3"))
 
 ```
 

@@ -2157,6 +2157,9 @@ AFDC receipt and Food Stamp receipt, and number of quarters of
 employment” or the “number of months of welfare receipt during years 1-2
 post_RA”. I assumed the former.</p>
 <table style="text-align:center">
+<caption>
+<strong>OLS regression on TLyes by age group</strong>
+</caption>
 <tr>
 <td colspan="4" style="border-bottom: 1px solid black">
 </td>
@@ -2191,6 +2194,19 @@ nqemp12
 <td style="text-align:left">
 </td>
 <td>
+M AFDC Receipt
+</td>
+<td>
+M Food Stamp Receipt
+</td>
+<td>
+Q Employed
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
 (1)
 </td>
 <td>
@@ -2209,26 +2225,26 @@ nqemp12
 TLyes
 </td>
 <td>
-9.000<sup>*</sup>
+5.889
 </td>
 <td>
-5.867
+4.333
 </td>
 <td>
-1.267
+0.889
 </td>
 </tr>
 <tr>
 <td style="text-align:left">
 </td>
 <td>
-(5.128)
+(4.461)
 </td>
 <td>
-(4.735)
+(4.117)
 </td>
 <td>
-(1.714)
+(1.490)
 </td>
 </tr>
 <tr>
@@ -2243,7 +2259,7 @@ TLyes
 </tr>
 <tr>
 <td style="text-align:left">
-ag1
+Group 1
 </td>
 <td>
 7.621<sup>**</sup>
@@ -2259,13 +2275,13 @@ ag1
 <td style="text-align:left">
 </td>
 <td>
-(3.505)
+(3.504)
 </td>
 <td>
-(3.237)
+(3.234)
 </td>
 <td>
-(1.172)
+(1.170)
 </td>
 </tr>
 <tr>
@@ -2280,7 +2296,7 @@ ag1
 </tr>
 <tr>
 <td style="text-align:left">
-ag2
+Group 2
 </td>
 <td>
 7.131<sup>**</sup>
@@ -2296,13 +2312,13 @@ ag2
 <td style="text-align:left">
 </td>
 <td>
-(3.516)
+(3.514)
 </td>
 <td>
-(3.247)
+(3.244)
 </td>
 <td>
-(1.175)
+(1.174)
 </td>
 </tr>
 <tr>
@@ -2317,7 +2333,7 @@ ag2
 </tr>
 <tr>
 <td style="text-align:left">
-ag3
+Group 3
 </td>
 <td>
 7.371<sup>**</sup>
@@ -2333,13 +2349,13 @@ ag3
 <td style="text-align:left">
 </td>
 <td>
-(3.621)
+(3.619)
 </td>
 <td>
-(3.343)
+(3.340)
 </td>
 <td>
-(1.210)
+(1.209)
 </td>
 </tr>
 <tr>
@@ -2354,13 +2370,29 @@ ag3
 </tr>
 <tr>
 <td style="text-align:left">
-ag4
+Trt x Group 1
 </td>
 <td>
+-6.579
 </td>
 <td>
+-4.933
 </td>
 <td>
+-0.216
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(4.526)
+</td>
+<td>
+(4.177)
+</td>
+<td>
+(1.512)
 </td>
 </tr>
 <tr>
@@ -2375,39 +2407,29 @@ ag4
 </tr>
 <tr>
 <td style="text-align:left">
+Trt x Group 2
 </td>
 <td>
+-5.796
 </td>
 <td>
+-4.242
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-tl1
-</td>
-<td>
--9.690<sup>*</sup>
-</td>
-<td>
--6.467
-</td>
-<td>
--0.594
+-0.232
 </td>
 </tr>
 <tr>
 <td style="text-align:left">
 </td>
 <td>
-(5.184)
+(4.538)
 </td>
 <td>
-(4.787)
+(4.188)
 </td>
 <td>
-(1.733)
+(1.516)
 </td>
 </tr>
 <tr>
@@ -2422,97 +2444,29 @@ tl1
 </tr>
 <tr>
 <td style="text-align:left">
-tl2
+Trt x Group 3
 </td>
 <td>
--8.907<sup>*</sup>
+-4.815
 </td>
 <td>
--5.775
+-2.226
 </td>
 <td>
--0.610
+-0.020
 </td>
 </tr>
 <tr>
 <td style="text-align:left">
 </td>
 <td>
-(5.194)
+(4.731)
 </td>
 <td>
-(4.796)
+(4.367)
 </td>
 <td>
-(1.736)
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-</td>
-<td>
-</td>
-<td>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-tl3
-</td>
-<td>
--7.927
-</td>
-<td>
--3.759
-</td>
-<td>
--0.397
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-</td>
-<td>
-(5.365)
-</td>
-<td>
-(4.954)
-</td>
-<td>
-(1.793)
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-</td>
-<td>
-</td>
-<td>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-tl4
-</td>
-<td>
-</td>
-<td>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td style="text-align:left">
-</td>
-<td>
-</td>
-<td>
-</td>
-<td>
+(1.580)
 </td>
 </tr>
 <tr>
@@ -2543,13 +2497,13 @@ Constant
 <td style="text-align:left">
 </td>
 <td>
-(3.457)
+(3.456)
 </td>
 <td>
-(3.192)
+(3.189)
 </td>
 <td>
-(1.155)
+(1.154)
 </td>
 </tr>
 <tr>
@@ -2571,13 +2525,13 @@ Constant
 Observations
 </td>
 <td>
-1,067
+1,071
 </td>
 <td>
-1,067
+1,071
 </td>
 <td>
-1,067
+1,071
 </td>
 </tr>
 <tr>
@@ -2591,7 +2545,7 @@ R<sup>2</sup>
 0.009
 </td>
 <td>
-0.019
+0.020
 </td>
 </tr>
 <tr>
@@ -2605,35 +2559,35 @@ Adjusted R<sup>2</sup>
 0.002
 </td>
 <td>
-0.013
+0.014
 </td>
 </tr>
 <tr>
 <td style="text-align:left">
-Residual Std. Error (df = 1059)
+Residual Std. Error (df = 1063)
 </td>
 <td>
-8.468
+8.465
 </td>
 <td>
-7.820
+7.812
 </td>
 <td>
-2.830
+2.827
 </td>
 </tr>
 <tr>
 <td style="text-align:left">
-F Statistic (df = 7; 1059)
+F Statistic (df = 7; 1063)
 </td>
 <td>
-0.937
+0.939
 </td>
 <td>
-1.329
+1.304
 </td>
 <td>
-2.991<sup>***</sup>
+3.169<sup>***</sup>
 </td>
 </tr>
 <tr>
